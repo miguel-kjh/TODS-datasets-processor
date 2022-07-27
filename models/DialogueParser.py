@@ -2,7 +2,7 @@ from tqdm import tqdm
 from typing import List
 
 import pandas as pd
-from utils.datasetUtils import list_actions
+from utils.ProjectConstants import list_actions
 
 class DialogueParser:
 
@@ -18,9 +18,7 @@ class DialogueParser:
             'Intents': [],
             'Original_Intents': [],
             'Slot': [],
-            'Slot_values': [],
-            'Entity': [],
-            'Entity_values': []
+            'Slot_values': []
         }
 
         for dialogue in tqdm(dialogues, desc='Parsing dialogues for %s' % type_dataset):
@@ -46,31 +44,8 @@ class DialogueParser:
                 name_slot = turn['state'][0]['slot_values']['slot_name']
                 value_slot = turn['state'][0]['slot_values']['slot_value_list']
 
-                slots_and_entities = {
-                    'Slot': {
-                        'name': [],
-                        'value': []
-                    },
-                    'Entity': {
-                        'name': [],
-                        'value': []
-                    }
-                }
-
-                for name, value in zip(name_slot, value_slot):
-
-                    if is_categorical_slots[name]:
-                        slots_and_entities['Slot']['name'].append(name)
-                        slots_and_entities['Slot']['value'].append(value)
-                    else:
-                        if len(df['Entity']) == 0 or df['Entity'][-1] != name:
-                            slots_and_entities['Entity']['name'].append(name)
-                            slots_and_entities['Entity']['value'].append(value)
-
-                df['Slot'].append(slots_and_entities['Slot']['name'])
-                df['Slot_values'].append(slots_and_entities['Slot']['value'])
-                df['Entity'].append(slots_and_entities['Entity']['name'])
-                df['Entity_values'].append(slots_and_entities['Entity']['value'])
+                df['Slot'].append(name_slot)
+                df['Slot_values'].append(value_slot)
 
         return pd.DataFrame(df)
 

@@ -6,7 +6,10 @@ import pandas as pd
 from tqdm import tqdm
 from typing import List
 
+from models.schemaDatabases import SchemaDatabase
 from view.Logger import Logger
+from utils.utils import list2atomic_item
+
 
 class DatasetCleaner:
 
@@ -21,15 +24,9 @@ class DatasetCleaner:
 
         self._user_speaker = 0
         self._system_speaker = 1
+        self.schemaDatabase = SchemaDatabase()
 
     def clean(self, datasets_sgd: List[pd.DataFrame]) -> pd.DataFrame:
-        Logger.info('Reading datasets...')
-
-        for df in datasets_sgd:
-            index_row_system = df[df[self._speaker_name] == self._system_speaker].index
-            action_values = df[self._action_name].values[index_row_system]
-            df.drop(index_row_system, inplace=True)
-            df[self._action_name] = action_values
 
         Logger.info('Merging datasets...')
 
@@ -40,19 +37,33 @@ class DatasetCleaner:
         dataset = pd.concat(datasets_sgd)
         dataset[self._type_name] = np.concatenate(
             [
-                ['train'] * len(datasets_sgd[0]), 
-                ['dev'] * len(datasets_sgd[1]), 
+                ['train'] * len(datasets_sgd[0]),
+                ['dev'] * len(datasets_sgd[1]),
                 ['test'] * len(datasets_sgd[2])
             ]
         )
 
-        Logger.info('Cleaning datasets...')
+        for id, df in tqdm(dataset.groupby(by="Dialogue Id"), desc="Cleaning datasets..."):
+            for i in range(0, len(df), 2):
+                row_1 = df.iloc[i]
+                row_2 = df.iloc[i + 1]
+                self.schemaDatabase.add_dialogue_id(id)
+                self.schemaDatabase.add_domain(row_1[self._service_name])
+                self.schemaDatabase.add_task(row_1["Original_Intents"])
+                self.schemaDatabase.add_user_utterance(row_1["Text"])
+                self.schemaDatabase.add_intention(row_1[self._intent_name])
+                self.schemaDatabase.add_atomic_intent(list2atomic_item(row_1[self._intent_name]))
+                self.schemaDatabase.add_slots(row_1["Slot"])
+                self.schemaDatabase.add_slots_value(row_1["Slot_values"])
+                self.schemaDatabase.add_bot_response(row_2["Text"])
+                self.schemaDatabase.add_action(row_2[self._action_name])
+                self.schemaDatabase.add_atomic_action(list2atomic_item(row_2[self._action_name]))
 
-        dataset.drop(columns=[self._speaker_name], inplace=True)
-        #dataset[self._action_name] = dataset[self._action_name].apply(lambda acts: list(set(acts)))
-        #dataset[self._intent_name] = dataset[self._intent_name].apply(lambda x: [x[-1]])
-        #dataset[self._action_name] = dataset[self._action_name].apply(lambda x: list(set(ast.literal_eval(x))))
-        #dataset[self._intent_name] = dataset[self._intent_name].apply(
+        # dataset.drop(columns=[self._speaker_name], inplace=True)
+        # dataset[self._action_name] = dataset[self._action_name].apply(lambda acts: list(set(acts)))
+        # dataset[self._intent_name] = dataset[self._intent_name].apply(lambda x: [x[-1]])
+        # dataset[self._action_name] = dataset[self._action_name].apply(lambda x: list(set(ast.literal_eval(x))))
+        # dataset[self._intent_name] = dataset[self._intent_name].apply(
         #    lambda x: x.replace(self._dummy_mark, '') if self._dummy_mark in x else x)
 
-        return dataset
+        return pd.DataFrame(self.schemaDatabase.get_dataset_schema())

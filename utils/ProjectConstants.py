@@ -4,6 +4,27 @@ PROJECT_NAME = 'SGD-dataset'
 SEED = 2022
 NUM_GPUS = 1
 
+list_actions = [
+    'AFFIRM',
+    'AFFIRM_INTENT',
+    'CONFIRM',
+    'GOODBYE',
+    'INFORM',
+    'INFORM_COUNT',
+    'INFORM_INTENT',
+    'NEGATE',
+    'NEGATE_INTENT',
+    'NOTIFY_FAILURE',
+    'NOTIFY_SUCCESS',
+    'OFFER',
+    'OFFER_INTENT',
+    'REQUEST',
+    'REQUEST_ALTS',
+    'REQ_MORE',
+    'SELECT',
+    'THANK_YOU',
+]
+
 # Paths
 
 REPOSITORY_PATH = "schema_guided_dstc8"
