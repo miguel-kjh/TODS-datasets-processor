@@ -59,11 +59,4 @@ class DatasetCleaner:
                 self.schemaDatabase.add_action(row_2[self._action_name])
                 self.schemaDatabase.add_atomic_action(list2atomic_item(row_2[self._action_name]))
 
-        # dataset.drop(columns=[self._speaker_name], inplace=True)
-        # dataset[self._action_name] = dataset[self._action_name].apply(lambda acts: list(set(acts)))
-        # dataset[self._intent_name] = dataset[self._intent_name].apply(lambda x: [x[-1]])
-        # dataset[self._action_name] = dataset[self._action_name].apply(lambda x: list(set(ast.literal_eval(x))))
-        # dataset[self._intent_name] = dataset[self._intent_name].apply(
-        #    lambda x: x.replace(self._dummy_mark, '') if self._dummy_mark in x else x)
-
         return pd.DataFrame(self.schemaDatabase.get_dataset_schema())
