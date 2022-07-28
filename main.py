@@ -32,8 +32,8 @@ def main():
 
 
 if __name__ == "__main__":
-    #main()
-    from datasets import load_dataset
+    main()
+    """from datasets import load_dataset
 
     dataset = load_dataset("multi_woz_v22")
     example = dataset['test'].to_dict()['turns'][0]
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     print("FRAMES")
     print(yaml.dump(example['frames']))
     print("ACTS")
-    print(yaml.dump(example['dialogue_acts']))
+    print(yaml.dump(example['dialogue_acts']))"""
     """
      turns: los dialogos -> lista
      'turn_id', 'speaker', 'utterance', 'frames', 'dialogue_acts'
