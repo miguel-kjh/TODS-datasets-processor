@@ -1,7 +1,7 @@
 
 
-def list2atomic_item(lst: list) -> str:
+def list2atomic_item(lst: list) -> list:
     """
     Convert a list to an atom.
     """
-    return '-'.join(lst)
+    return ['-'.join(lst)]
