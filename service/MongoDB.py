@@ -12,6 +12,7 @@ except Exception as e:
 
 DBNAME = "SGD"
 
+
 # TODO: add the possibility to save in different databases
 
 class MongoDB(InputService, OutputService):
@@ -44,7 +45,7 @@ class MongoDB(InputService, OutputService):
             collection.drop()
 
         try:
-            collection.insert_many(data, ordered=False) 
+            collection.insert_many(data, ordered=False)
         except Exception as _:
             for key, record in data.items():
                 record['Dialogue_id'] = key
