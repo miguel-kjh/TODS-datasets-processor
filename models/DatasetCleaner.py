@@ -1,6 +1,3 @@
-import ast
-import os
-
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -26,7 +23,7 @@ class DatasetCleaner:
         self._system_speaker = 1
         self.schemaDatabase = SchemaDatabase()
 
-    def clean(self, datasets_sgd: List[pd.DataFrame]) -> pd.DataFrame:
+    def clean(self, datasets_sgd: List) -> pd.DataFrame:
 
         Logger.info('Merging datasets...')
 
@@ -58,5 +55,6 @@ class DatasetCleaner:
                 self.schemaDatabase.add_bot_response(row_2["Text"])
                 self.schemaDatabase.add_action(row_2[self._action_name])
                 self.schemaDatabase.add_atomic_action(list2atomic_item(row_2[self._action_name]))
+                self.schemaDatabase.add_type(row_2[self._type_name])
 
         return pd.DataFrame(self.schemaDatabase.get_dataset_schema())

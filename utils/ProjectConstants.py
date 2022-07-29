@@ -1,8 +1,14 @@
 import os
 
-PROJECT_NAME = 'SGD-dataset'
-SEED = 2022
-NUM_GPUS = 1
+from enum import Enum
+
+
+class Domain(Enum):
+    SINGLEDOMAIN = 1
+    MULTIDOMAIN = 2
+    ALL = 3
+    TINY = 4
+    CHANGE_IDEA = 5
 
 list_actions = [
     'AFFIRM',

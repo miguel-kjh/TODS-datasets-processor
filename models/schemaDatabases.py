@@ -15,7 +15,8 @@ class SchemaDatabase:
             "Slots Value": [],
             "Bot Response": [],
             "Action": [],
-            "Atomic Action": []
+            "Atomic Action": [],
+            "Type": [],
         }
 
         self.dataset_schema = dataset_schema
@@ -52,6 +53,9 @@ class SchemaDatabase:
 
     def add_atomic_action(self, atomic_action: str) -> None:
         self.dataset_schema["Atomic Action"].append(atomic_action)
+
+    def add_type(self, type: str) -> None:
+        self.dataset_schema["Type"].append(type)
 
     def get_dataset_schema(self) -> dict:
         return self.dataset_schema
