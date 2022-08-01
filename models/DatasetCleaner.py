@@ -1,3 +1,5 @@
+from copy import copy
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -18,6 +20,8 @@ class DatasetCleaner:
         self._speaker_name = 'Speaker'
         self._type_name = 'Type'
         self._service_name = 'Service'
+
+        self.dummy_acton = 'LISTEN'
 
         self._user_speaker = 0
         self._system_speaker = 1
@@ -44,6 +48,12 @@ class DatasetCleaner:
             for i in range(0, len(df), 2):
                 row_1 = df.iloc[i]
                 row_2 = df.iloc[i + 1]
+
+                actions = copy(row_2[self._action_name])
+                actions.append(self.dummy_acton)
+                atomic_action = list2atomic_item(row_2[self._action_name])
+                atomic_action.append(self.dummy_acton)
+
                 self.schemaDatabase.add_dialogue_id(id)
                 self.schemaDatabase.add_domain(row_1[self._service_name])
                 self.schemaDatabase.add_task(row_1["Original_Intents"])
@@ -53,8 +63,8 @@ class DatasetCleaner:
                 self.schemaDatabase.add_slots(row_1["Slot"])
                 self.schemaDatabase.add_slots_value(row_1["Slot_values"])
                 self.schemaDatabase.add_bot_response(row_2["Text"])
-                self.schemaDatabase.add_action(row_2[self._action_name])
-                self.schemaDatabase.add_atomic_action(list2atomic_item(row_2[self._action_name]))
+                self.schemaDatabase.add_action(actions)
+                self.schemaDatabase.add_atomic_action(atomic_action)
                 self.schemaDatabase.add_type(row_2[self._type_name])
 
         return pd.DataFrame(self.schemaDatabase.get_dataset_schema())
