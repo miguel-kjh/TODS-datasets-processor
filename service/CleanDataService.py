@@ -11,7 +11,7 @@ class CleanDataService:
         super().__init__()
         self.mongodb_service = MongoDB(
             config['dataset']['DB_name'],
-            config['database']['path']
+            config['database'][0]['path']
         )
         self.filename = config['dataset']['filename']
         self.filters = TreeOfFilters()
