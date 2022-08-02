@@ -7,10 +7,13 @@ from service.FilterDataset import TreeOfFilters
 
 
 class CleanDataService:
-    def __init__(self):
+    def __init__(self, config: dict):
         super().__init__()
-        self.mongodb_service = MongoDB()
-        self.filename = 'SGD_dataset'
+        self.mongodb_service = MongoDB(
+            config['dataset']['DB_name'],
+            config['database']['path']
+        )
+        self.filename = config['dataset']['filename']
         self.filters = TreeOfFilters()
         self.dataset_cleaner = DatasetCleaner()
         self.dataset_types = [

@@ -8,13 +8,13 @@ from datasets import load_dataset
 
 class TransformDialogueService:
 
-    def __init__(self):
+    def __init__(self, config: dict):
         super().__init__()
-        self._dataset = load_dataset(REPOSITORY_PATH)
-        self._dataset_schema = load_dataset(REPOSITORY_PATH, name='schema')
+        self._dataset = load_dataset(config['dataset']['path'])
+        self._dataset_schema = load_dataset(config['dataset']['path'], name='schema')
         self.parser = DialogueParser()
-        self.mongodb_service = MongoDB()
-        self.filename = 'SGD_dataset'
+        self.mongodb_service = MongoDB(config['dataset']['DB_name'], config['database'][0]['path'])
+        self.filename = config['dataset']['filename']
 
     @staticmethod
     def _get_is_categorical_slot(schema: dict) -> dict:

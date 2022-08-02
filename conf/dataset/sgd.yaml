@@ -1,0 +1,3 @@
+DB_name: "SGD"
+filename: "SGD_dataset"
+path: "schema_guided_dstc8"

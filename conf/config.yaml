@@ -1,0 +1,5 @@
+database:
+  - path: mongodb://localhost:27017
+operation: "download"
+defaults:
+  - dataset: sgd.yaml

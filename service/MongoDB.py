@@ -10,16 +10,14 @@ try:
 except Exception as e:
     print("Some Modules are Missing in MongoDB.py")
 
-DBNAME = "SGD"
-
 
 # TODO: add the possibility to save in different databases
 
 class MongoDB(InputService, OutputService):
 
-    def __init__(self):
-        self.dBName = DBNAME
-        self.client = MongoClient(LOCAL_SERVER)
+    def __init__(self, db_name: str, local_server: str):
+        self.dBName = db_name
+        self.client = MongoClient(local_server)
         self.DB = self.client[self.dBName]
 
     def load(self, path: str, to_pandas: bool = True) -> object:
