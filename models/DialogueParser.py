@@ -1,3 +1,4 @@
+import numpy as np
 from tqdm import tqdm
 from typing import List
 
@@ -78,8 +79,8 @@ class DialogueParser:
                     df['Original_Intents'].append(intent)
                     name_slot = [state['slots_values']['slots_values_name'] for state in turn['state']]
                     value_slot = [state['slots_values']['slots_values_list'] for state in turn['state']]
-                    df['Slot'].append(name_slot)
-                    df['Slot_values'].append(value_slot)
+                    df['Slot'].append(name_slot[0] if name_slot else name_slot)
+                    df['Slot_values'].append(value_slot[0] if value_slot else value_slot)
                 else:
                     df['Intents'].append(None)
                     df['Original_Intents'].append(None)
