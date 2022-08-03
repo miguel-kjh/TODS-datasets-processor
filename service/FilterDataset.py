@@ -5,7 +5,8 @@ import pandas as pd
 
 from utils.ProjectConstants import Domain
 
-DOMAIN_FOR_TINY_DATASET = ['Restaurants_1', 'Movies_1', 'Events_1', 'Hotels_1']
+DOMAIN_FOR_TINY_DATASET_SGD = ['Restaurants_1', 'Movies_1', 'Events_1', 'Hotels_1']
+DOMAIN_FOR_TINY_DATASET_MULTI_WOZ = ['restaurants', 'train', 'hotel']
 
 
 class FilterDataset(metaclass=ABCMeta):
@@ -30,9 +31,11 @@ class FilterByColumn(FilterDataset):
 
 
 class TreeOfFilters(FilterDataset):
-    def __init__(self, column_name: str = 'Domain'):
+    def __init__(self, dataset: str, column_name: str = 'Domain'):
+        subset_of_domains = DOMAIN_FOR_TINY_DATASET_SGD if dataset == 'SGD_dataset' \
+            else DOMAIN_FOR_TINY_DATASET_MULTI_WOZ
         self.filters = {
-            Domain.TINY: [FilterByColumn(column_name, lambda x: x[0] in DOMAIN_FOR_TINY_DATASET and len(x) == 1)],
+            Domain.TINY: [FilterByColumn(column_name, lambda x: not x or x[0] in subset_of_domains and len(x) == 1)],
             Domain.SINGLEDOMAIN: [FilterByColumn(column_name, lambda x: len(x) == 1)],
             Domain.MULTIDOMAIN: [FilterByColumn(column_name, lambda x: len(x) > 1)],
             Domain.ALL: [FilterByColumn(None, None)],

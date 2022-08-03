@@ -2,8 +2,8 @@ from tqdm import tqdm
 
 from models.DatasetCleaner import DatasetCleaner
 from service.MongoDB import MongoDB
-from utils.ProjectConstants import SGD_DATASET_RES
 from service.FilterDataset import TreeOfFilters
+from view.Logger import Logger
 
 
 class CleanDataService:
@@ -14,7 +14,7 @@ class CleanDataService:
             config['database'][0]['path']
         )
         self.filename = config['dataset']['filename']
-        self.filters = TreeOfFilters()
+        self.filters = TreeOfFilters(self.filename)
         self.dataset_cleaner = DatasetCleaner()
         self.dataset_types = [
             f"{self.filename}_train",
@@ -24,10 +24,13 @@ class CleanDataService:
 
     def process(self):
         df_list = [self.mongodb_service.load(file) for file in self.dataset_types]
-        final_df = self.dataset_cleaner.clean(df_list)
-        self.mongodb_service.save(final_df, SGD_DATASET_RES)
+        Logger.info(f"clean data form {self.filename}")
 
+        final_df = self.dataset_cleaner.clean(df_list)
+        self.mongodb_service.save(final_df, self.filename)
+
+        Logger.info(f"\nsave to {self.mongodb_service.dBName} database")
         for domain_name, file in tqdm(self.filters.filter(final_df), desc="CleanDataService: Filtering dataset"):
-            self.mongodb_service.save(file, f"{SGD_DATASET_RES}_{domain_name}")
+            self.mongodb_service.save(file, f"{self.filename}_{domain_name}")
 
 
