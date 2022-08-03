@@ -2,7 +2,6 @@ from git import Object
 from service.InputService import InputService
 from service.OutputService import OutputService
 from view.Logger import Logger
-from utils.mongo_db_utils import LOCAL_SERVER
 
 try:
     from pymongo import MongoClient
@@ -10,8 +9,6 @@ try:
 except Exception as e:
     print("Some Modules are Missing in MongoDB.py")
 
-
-# TODO: add the possibility to save in different databases
 
 class MongoDB(InputService, OutputService):
 
