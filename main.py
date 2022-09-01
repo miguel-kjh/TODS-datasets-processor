@@ -15,5 +15,6 @@ def main(cfg: DictConfig) -> None:
     elif cfg.operation == "clean":
         CleanDataService(cfg).process()
 
+
 if __name__ == "__main__":
     main()
