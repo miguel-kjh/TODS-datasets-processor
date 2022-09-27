@@ -1,6 +1,9 @@
-
-def list2atomic_item(lst: list) -> list:
+def list2atomic_item(*kargs, sep="-") -> list:
     """
     Convert a list to an atom.
     """
-    return ['-'.join(lst)]
+    st = [
+        sep.join(arg)
+        for arg in kargs
+    ]
+    return [sep.join(st)]

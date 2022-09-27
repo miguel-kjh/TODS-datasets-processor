@@ -9,13 +9,17 @@ class SchemaDatabase:
             "Domain": [],
             "Task": [],
             "User Utterance": [],
-            "Intention": [],
-            "Atomic Intent": [],
+            "Intent": [],
+            "Domain_Intent": [],
+            "Atomic_Intent": [],
+            "Domain_Atomic_Intent": [],
             "Slots": [],
             "Slots Value": [],
             "Bot Response": [],
             "Action": [],
-            "Atomic Action": [],
+            "Domain_Action": [],
+            "Atomic_Action": [],
+            "Domain_Atomic_Action": [],
             "Type": [],
         }
 
@@ -34,10 +38,10 @@ class SchemaDatabase:
         self.dataset_schema["User Utterance"].append(user_utterance)
 
     def add_intention(self, intention: str) -> None:
-        self.dataset_schema["Intention"].append(intention)
+        self.dataset_schema["Intent"].append(intention)
 
     def add_atomic_intent(self, atomic_intent: str) -> None:
-        self.dataset_schema["Atomic Intent"].append(atomic_intent)
+        self.dataset_schema["Atomic_Intent"].append(atomic_intent)
 
     def add_slots(self, slots: List[str]) -> None:
         self.dataset_schema["Slots"].append(slots)
@@ -52,7 +56,19 @@ class SchemaDatabase:
         self.dataset_schema["Action"].append(action)
 
     def add_atomic_action(self, atomic_action: str) -> None:
-        self.dataset_schema["Atomic Action"].append(atomic_action)
+        self.dataset_schema["Atomic_Action"].append(atomic_action)
+
+    def add_domain_intent(self, domain_intent: str) -> None:
+        self.dataset_schema["Domain_Intent"].append(domain_intent)
+
+    def add_domain_atomic_intent(self, domain_atomic_intent: str) -> None:
+        self.dataset_schema["Domain_Atomic_Intent"].append(domain_atomic_intent)
+
+    def add_domain_action(self, domain_action: str) -> None:
+        self.dataset_schema["Domain_Action"].append(domain_action)
+
+    def add_domain_atomic_action(self, domain_atomic_action: str) -> None:
+        self.dataset_schema["Domain_Atomic_Action"].append(domain_atomic_action)
 
     def add_type(self, type: str) -> None:
         self.dataset_schema["Type"].append(type)
