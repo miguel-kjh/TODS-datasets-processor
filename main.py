@@ -5,6 +5,7 @@ import hydra
 import numpy as np
 from omegaconf import DictConfig
 
+from service.AnalyseService import AnalyseService
 from service.CleanDataService import CleanDataService
 from service.TransformDialogueService import TransformDialogueService
 
@@ -23,6 +24,8 @@ def main(cfg: DictConfig) -> None:
         TransformDialogueService(cfg).process()
     elif cfg.operation == "clean":
         CleanDataService(cfg).process()
+    elif cfg.operation == "analyse":
+        AnalyseService(cfg).process()
 
 
 if __name__ == "__main__":
