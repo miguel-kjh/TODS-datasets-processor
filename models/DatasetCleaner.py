@@ -75,7 +75,7 @@ class DatasetCleaner:
                     self.schemaDatabase.add_type(row_2[self._type_name])
                     self.schemaDatabase.add_mandatory_slots(row_1["Slot"])
                     self.schemaDatabase.add_mandatory_slots_value(row_1["Slot_values"])
-                    self.schemaDatabase.add_optional_slots(None)
-                    self.schemaDatabase.add_optional_slots_value(None)
+                    self.schemaDatabase.add_optional_slots([])
+                    self.schemaDatabase.add_optional_slots_value([])
 
         return pd.DataFrame(self.schemaDatabase.get_dataset_schema())

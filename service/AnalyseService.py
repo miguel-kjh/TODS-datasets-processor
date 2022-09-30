@@ -14,8 +14,8 @@ class AnalyseService:
     def __init__(self, config: dict):
         names_datasets = \
             {
-                'multi_woz': 'multi_woz_dataset_TINY',
-                'SGD': 'SGD_dataset_TINY',
+                'multi_woz': 'multi_woz_dataset_MULTIDOMAIN',
+                'SGD': 'SGD_dataset_MULTIDOMAIN',
             }
         self.datasets = {
             name: MongoDB(path, config['database'][0]['path']).load(name)
