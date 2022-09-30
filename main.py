@@ -11,6 +11,12 @@ from service.TransformDialogueService import TransformDialogueService
 
 warnings.filterwarnings("ignore", ".*")
 
+operations = {
+    'analyse': AnalyseService,
+    'clean': CleanDataService,
+    'transform': TransformDialogueService
+}
+
 
 def reset_seed(seed: int) -> None:
     random.seed(seed)
@@ -20,12 +26,7 @@ def reset_seed(seed: int) -> None:
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
     reset_seed(cfg.seed)
-    if cfg.operation == "download":
-        TransformDialogueService(cfg).process()
-    elif cfg.operation == "clean":
-        CleanDataService(cfg).process()
-    elif cfg.operation == "analyse":
-        AnalyseService(cfg).process()
+    operations[cfg.operation](cfg).process()
 
 
 if __name__ == "__main__":

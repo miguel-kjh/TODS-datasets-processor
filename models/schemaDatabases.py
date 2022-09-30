@@ -10,16 +10,16 @@ class SchemaDatabase:
             "Task": [],
             "User Utterance": [],
             "Intent": [],
-            "Domain_Intent": [],
             "Atomic_Intent": [],
-            "Domain_Atomic_Intent": [],
             "Slots": [],
             "Slots Value": [],
+            "Mandatory Slots": [],
+            "Mandatory Slots Value": [],
+            "Optional Slots": [],
+            "Optional Slots Value": [],
             "Bot Response": [],
             "Action": [],
-            "Domain_Action": [],
             "Atomic_Action": [],
-            "Domain_Atomic_Action": [],
             "Type": [],
         }
 
@@ -72,6 +72,18 @@ class SchemaDatabase:
 
     def add_type(self, type: str) -> None:
         self.dataset_schema["Type"].append(type)
+
+    def add_mandatory_slots(self, mandatory_slots: List[str]) -> None:
+        self.dataset_schema["Mandatory Slots"].append(mandatory_slots)
+
+    def add_mandatory_slots_value(self, mandatory_slots_value: List[str]) -> None:
+        self.dataset_schema["Mandatory Slots Value"].append(mandatory_slots_value)
+
+    def add_optional_slots(self, optional_slots: List[str]) -> None:
+        self.dataset_schema["Optional Slots"].append(optional_slots)
+
+    def add_optional_slots_value(self, optional_slots_value: List[str]) -> None:
+        self.dataset_schema["Optional Slots Value"].append(optional_slots_value)
 
     def get_dataset_schema(self) -> dict:
         return self.dataset_schema
