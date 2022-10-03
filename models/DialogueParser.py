@@ -69,7 +69,10 @@ class DialogueParser:
             df['Text'] += dialogue['turns']['utterance']
 
             for turn, speaker, act, utt in zip(
-                    dialogue['turns']['frames'], dialogue['turns']['speaker'], dialogue['turns']['dialogue_acts'], dialogue['turns']['utterance']
+                    dialogue['turns']['frames'],
+                    dialogue['turns']['speaker'],
+                    dialogue['turns']['dialogue_acts'],
+                    dialogue['turns']['utterance']
             ):
 
                 df['Actions'].append(act['dialog_act']['act_type'])

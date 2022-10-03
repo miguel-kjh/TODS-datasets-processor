@@ -1,11 +1,11 @@
 import copy
-import itertools
 import random
 
 import pandas as pd
 
 from tqdm import tqdm
 
+from service.CSVService import CSVService
 from service.MongoDB import MongoDB
 
 
@@ -14,8 +14,8 @@ class AnalyseService:
     def __init__(self, config: dict):
         names_datasets = \
             {
-                'multi_woz': 'multi_woz_dataset_TINY',
-                'SGD': 'SGD_dataset_TINY',
+                'multi_woz': 'multi_woz_dataset_ALL',
+                'SGD': 'SGD_dataset_ALL',
             }
         self.datasets = {
             name: MongoDB(path, config['database'][0]['path']).load(name)
@@ -23,8 +23,10 @@ class AnalyseService:
         }
 
         self._column_actions = 'Action'
-        self._column_intent = 'Intention'
+        self._column_intent = 'Intent'
         self._column_dialogue_id = 'Dialogue ID'
+
+        self.csv_service = CSVService()
 
         # check if the datasets are loaded correctly
         for name, dataset in self.datasets.items():
@@ -56,6 +58,9 @@ class AnalyseService:
         :return: ambiguity of the dataset
         """
 
+        def to_portion(ambiguity: int, length: int, multiplier: int = 100, to_round: int = 2) -> float:
+            return round(ambiguity * multiplier / length, to_round)
+
         dataset_sample = copy.deepcopy(dataset)
         columns = [self._column_dialogue_id, self._column_intent, self._column_actions]
         dataset_sample = dataset_sample[columns]
@@ -73,10 +78,32 @@ class AnalyseService:
             if self._check_ambiguity(dialogue_a[1], dialogue_b[1]):
                 count_ambiguity += 1
 
-        return round(count_ambiguity / len(dataset_sample), 2)
+        return to_portion(count_ambiguity, len(dataset_sample))
+
+    def _create_dataset_of_ambiguity(self, sample: int = 1000) -> pd.DataFrame:
+        """
+        Create a dataset of ambiguity
+        :param sample:
+        :return dataset of ambiguity:
+        """
+        df = {
+            'dataset': [],
+            'ambiguity(%)': [],
+            'sample': [sample] * len(self.datasets),
+        }
+        for name, dataset in self.datasets.items():
+            df['dataset'].append(name)
+            df['ambiguity(%)'].append(
+                self._calculate_ambiguity(dataset, sample=sample)
+            )
+
+        return pd.DataFrame(df)
 
     def process(self) -> None:
-        print("Ambiguity of the datasets:")
-        for name, dataset in self.datasets.items():
-            print(f"{name}: {self._calculate_ambiguity(dataset)}")
+        """
+        Process the ambiguity of the datasets
+        :return:
+        """
 
+        df = self._create_dataset_of_ambiguity()
+        self.csv_service.save(df, 'ambiguity')
