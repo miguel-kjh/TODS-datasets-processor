@@ -9,7 +9,7 @@ class SchemaDatabase:
             "Domain": [],
             "Task": [],
             "User Utterance": [],
-            "Intent": [],
+            "Intention": [],
             "Atomic_Intent": [],
             "Slots": [],
             "Slots Value": [],
@@ -38,7 +38,7 @@ class SchemaDatabase:
         self.dataset_schema["User Utterance"].append(user_utterance)
 
     def add_intention(self, intention: str) -> None:
-        self.dataset_schema["Intent"].append(intention)
+        self.dataset_schema["Intention"].append(intention)
 
     def add_atomic_intent(self, atomic_intent: str) -> None:
         self.dataset_schema["Atomic_Intent"].append(atomic_intent)

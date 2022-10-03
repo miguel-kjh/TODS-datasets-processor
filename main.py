@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", ".*")
 operations = {
     'analyse': AnalyseService,
     'clean': CleanDataService,
-    'transform': TransformDialogueService
+    'download': TransformDialogueService
 }
 
 
