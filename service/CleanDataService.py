@@ -1,4 +1,4 @@
-from copy import copy
+import copy
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -8,7 +8,22 @@ from models.DatasetCleaner import DatasetCleaner
 from service.MongoDB import MongoDB
 from service.FilterDataset import TreeOfFilters
 from utils.ProjectConstants import Domain
+from utils.utils import get_dialogues, check_ambiguity
 from view.Logger import Logger
+
+
+def deleted_ambiguity(df: pd.DataFrame) -> pd.DataFrame:
+    df = copy.deepcopy(df)
+    dialogues = get_dialogues(df)
+    dialogue_to_deleted = []
+    for idx, dialogue_a in enumerate(dialogues):
+        if dialogue_a.id not in dialogue_to_deleted:
+            for dialogue_b in dialogues[idx + 1:]:
+                if check_ambiguity(dialogue_a, dialogue_b):
+                    dialogue_to_deleted.append(dialogue_b.id)
+
+    df = df[~df['Dialogue ID'].isin(dialogue_to_deleted)]
+    return df
 
 
 class CleanDataService:
@@ -63,7 +78,7 @@ class CleanDataService:
             elif dialogue_id in X_test:
                 new_distribution.append("test")
 
-        df['Type'] = copy(new_distribution)
+        df['Type'] = copy.copy(new_distribution)
         return df
 
     def process(self):
@@ -74,8 +89,11 @@ class CleanDataService:
         self.mongodb_service.save(final_df, self.filename)
 
         Logger.info(f"\nsave to {self.mongodb_service.dBName} database")
-        for domain_name, file in tqdm(self.filters.filter(final_df), desc="CleanDataService: Filtering dataset"):
+        for domain_name, df in tqdm(self.filters.filter(final_df), desc="CleanDataService: Filtering dataset"):
             Logger.info(f"save to {self.mongodb_service.dBName} database - {domain_name}")
             if domain_name != Domain.ALL.name:
-                file = self._changes_the_division_of_data(file)
-            self.mongodb_service.save(file, f"{self.filename}_{domain_name}")
+                df = self._changes_the_division_of_data(df)
+            self.mongodb_service.save(df, f"{self.filename}_{domain_name}")
+            df_no_ambiguity = deleted_ambiguity(df)
+            df_no_ambiguity = self._changes_the_division_of_data(df_no_ambiguity)
+            self.mongodb_service.save(df_no_ambiguity, f"{self.filename}_no_ambiguity_{domain_name}")
