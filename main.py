@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", ".*")
 operations = {
     'analyse': AnalyseService,
     'clean': CleanDataService,
-    'download': TransformDialogueService
+    'download': TransformDialogueService,
 }
 
 
@@ -26,6 +26,7 @@ def reset_seed(seed: int) -> None:
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
     reset_seed(cfg.seed)
+    assert cfg.operation in operations, f"Operation {cfg.operation} is not supported, only {list(operations.keys())}"
     operations[cfg.operation](cfg).process()
 
 
