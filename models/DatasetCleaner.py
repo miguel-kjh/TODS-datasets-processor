@@ -44,14 +44,11 @@ class DatasetCleaner:
             ]
         )
 
+        Logger.info(f'Number of dialogues: {len(dataset[self._id_name].unique())}')
+
         for id, df in tqdm(dataset.groupby(by="Dialogue Id"), desc="Cleaning datasets..."):
 
-            cond = 0
-            for col in [self._intent_name, self._action_name, self._service_name]:
-                df_mask = df[col].apply(lambda x: "" if type(x) == list and len(x) == 0 else x) == ""
-                cond += df_mask.sum()
-
-            if cond == 0:
+            if [] not in df[self._action_name].tolist() and "" not in df[self._action_name].tolist():
                 for i in range(0, len(df), 2):
                     row_1 = df.iloc[i]
                     row_2 = df.iloc[i + 1]
@@ -61,6 +58,8 @@ class DatasetCleaner:
                     atomic_action = list2atomic_item(row_2[self._action_name])
                     atomic_action.append(self.dummy_acton)
 
+
+                    # TODO: stack this method in only one
                     self.schemaDatabase.add_dialogue_id(id)
                     self.schemaDatabase.add_domain(row_1[self._service_name])
                     self.schemaDatabase.add_task(row_1["Original_Intents"])
@@ -78,4 +77,6 @@ class DatasetCleaner:
                     self.schemaDatabase.add_optional_slots([])
                     self.schemaDatabase.add_optional_slots_value([])
 
-        return pd.DataFrame(self.schemaDatabase.get_dataset_schema())
+        df_cleaned = pd.DataFrame(self.schemaDatabase.get_dataset_schema())
+        Logger.info(f'Number of dialogues in the final datasets: {len(df_cleaned["Dialogue ID"].unique())}')
+        return df_cleaned

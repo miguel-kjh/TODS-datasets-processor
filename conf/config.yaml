@@ -1,6 +1,13 @@
 database:
-  - path: mongodb://localhost:27017
-operation: "clean"
-seed: 2022
+  path: mongodb://localhost:27017
 defaults:
   - dataset: sgd.yaml
+
+operation: "clean"
+seed: 2022
+train_size: 0.6
+val_size: 0.2
+test_size: 0.2
+
+
+

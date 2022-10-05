@@ -27,7 +27,7 @@ class AnalyseService:
             }
 
         self.datasets = {
-            path: MongoDB(path, config['database'][0]['path']).load(name)
+            path: MongoDB(path, config['database']['path']).load(name)
             for path, name in names_datasets.items()
         }
 

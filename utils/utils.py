@@ -39,7 +39,9 @@ def get_dialogues(
     for dialogue_id, dialogue in dataset.groupby(column_dialogue_id):
         dialogue_story = DialogueStory(str(dialogue_id), dialogue[column_domain].iloc[0])
         for row in dialogue.to_records('dict'):
-            dialogue_story.add_intentions_actions(row[column_intent], row[column_actions])
+            intentions = [intent.split('-')[-1] for intent in row[column_intent]]
+            actions = [action.split('-')[-1] for action in row[column_actions]]
+            dialogue_story.add_intentions_actions(intentions, actions)
         dialogues.append(dialogue_story)
     return dialogues
 
@@ -91,3 +93,34 @@ def calculate_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> flo
             count_ambiguity += 1
 
     return to_percentage(count_ambiguity, len(dataset_sample))
+
+
+if __name__ == '__main__':
+    dialogue_a = DialogueStory('id0', 'd1')
+    dialogue_a.add_intentions_actions(
+        ['I_I','I'],
+        ['REQ_MORE']
+    )
+    dialogue_a.add_intentions_actions(
+        ['I'],
+        ['CONFIRM']
+    )
+    dialogue_a.add_intentions_actions(
+        ['I'],
+        ['REQ_MORE']
+    )
+    dialogue_b = DialogueStory('id1', 'd1')
+    dialogue_b.add_intentions_actions(
+        ['I_I','I'],
+        ['REQ_MORE']
+    )
+    dialogue_b.add_intentions_actions(
+        ['I'],
+        ['CONFIRM']
+    )
+    # test check_ambiguity
+    assert check_ambiguity(dialogue_a, dialogue_b) == False
+
+
+
+

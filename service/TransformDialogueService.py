@@ -12,7 +12,7 @@ class TransformDialogueService:
         self._dataset = load_dataset(config['dataset']['path'])
         #self._dataset_schema = load_dataset(config['dataset']['path'], name=config['dataset']['name_'])
         self.parser = DialogueParser()
-        self.mongodb_service = MongoDB(config['dataset']['DB_name'], config['database'][0]['path'])
+        self.mongodb_service = MongoDB(config['dataset']['DB_name'], config['database']['path'])
         self.filename = config['dataset']['filename']
 
     @staticmethod

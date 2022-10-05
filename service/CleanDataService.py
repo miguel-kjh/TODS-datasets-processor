@@ -27,14 +27,18 @@ def deleted_ambiguity(df: pd.DataFrame) -> pd.DataFrame:
 
 
 class CleanDataService:
-    def __init__(self, config: dict, train_test_split: float = 0.6, val_split: float = 0.2, test_split: float = 0.2):
+    def __init__(self, config: dict):
         super().__init__()
 
-        assert train_test_split + val_split + test_split == 1, "train_test_split + val_split + test_split must be 1"
+        train_size = config["train_size"]
+        val_size = config["val_size"]
+        test_size = config["test_size"]
+
+        assert train_size + val_size + test_size == 1, "train_test_split + val_split + test_split must be 1"
 
         self.mongodb_service = MongoDB(
             config['dataset']['DB_name'],
-            config['database'][0]['path']
+            config['database']['path']
         )
         self.filename = config['dataset']['filename']
         self.filters = TreeOfFilters(self.filename)
@@ -44,9 +48,9 @@ class CleanDataService:
             f"{self.filename}_validation",
             f"{self.filename}_test"
         ]
-        self.train_test_split = train_test_split
-        self.val_split = val_split
-        self.test_split = test_split
+        self.train_size = train_size
+        self.val_size = val_size
+        self.test_size = test_size
 
     @staticmethod
     def train_val_test_split(X, y, train_size, val_size, test_size):
@@ -65,9 +69,9 @@ class CleanDataService:
         X_train, X_val, X_test, _, _, _ = self.train_val_test_split(
             list_idx_stories,
             list_idx_stories,
-            self.train_test_split,
-            self.val_split,
-            self.test_split
+            self.train_size,
+            self.val_size,
+            self.test_size
         )
         new_distribution = []
         for idx, dialogue_id in enumerate(df["Dialogue ID"].tolist()):
