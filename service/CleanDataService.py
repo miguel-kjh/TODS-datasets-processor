@@ -34,7 +34,7 @@ class CleanDataService:
         val_size = config["val_size"]
         test_size = config["test_size"]
 
-        assert train_size + val_size + test_size == 1, "train_test_split + val_split + test_split must be 1"
+        assert train_size + val_size + test_size == 1, "train_size + val_size + test_size must be 1"
 
         self.mongodb_service = MongoDB(
             config['dataset']['DB_name'],
@@ -85,6 +85,13 @@ class CleanDataService:
         df['Type'] = copy.copy(new_distribution)
         return df
 
+    @staticmethod
+    def _print_info(df: pd.DataFrame):
+        Logger.info(f"Number of dialogues: {len(df['Dialogue ID'].unique())}")
+        Logger.info(f"Number of dialogue train: {len(df[df['Type'] == 'train'].groupby('Dialogue ID').count())}")
+        Logger.info(f"Number of dialogue dev: {len(df[df['Type'] == 'dev'].groupby('Dialogue ID').count())}")
+        Logger.info(f"Number of dialogue test: {len(df[df['Type'] == 'test'].groupby('Dialogue ID').count())}")
+
     def process(self):
         df_list = [self.mongodb_service.load(file) for file in self.dataset_types]
         Logger.info(f"clean data form {self.filename}")
@@ -94,10 +101,14 @@ class CleanDataService:
 
         Logger.info(f"\nsave to {self.mongodb_service.dBName} database")
         for domain_name, df in tqdm(self.filters.filter(final_df), desc="CleanDataService: Filtering dataset"):
-            Logger.info(f"save to {self.mongodb_service.dBName} database - {domain_name}")
             if domain_name != Domain.ALL.name:
                 df = self._changes_the_division_of_data(df)
+            Logger.info(f"save to {self.mongodb_service.dBName} database - {domain_name}")
+            self._print_info(df)
             self.mongodb_service.save(df, f"{self.filename}_{domain_name}")
+
             df_no_ambiguity = deleted_ambiguity(df)
             df_no_ambiguity = self._changes_the_division_of_data(df_no_ambiguity)
+            Logger.info(f"save to {self.mongodb_service.dBName} database - {domain_name}_no_ambiguity")
+            self._print_info(df_no_ambiguity)
             self.mongodb_service.save(df_no_ambiguity, f"{self.filename}_no_ambiguity_{domain_name}")

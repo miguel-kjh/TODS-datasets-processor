@@ -21,8 +21,8 @@ class DialogueStory:
     def add_interaction(self, dialogue_interaction: DialogueInteraction) -> None:
         self.dialogue_story.append(dialogue_interaction)
 
-    def add_intentions_actions(self, intention: List[str], actions: List[str]) -> None:
-        state = DialogueState(intention)
+    def add_intentions_actions(self, intention: List[str], actions: List[str], slots: List[str]) -> None:
+        state = DialogueState(intention, slots)
         dialogue_interaction = DialogueInteraction(state, actions)
         self.dialogue_story.append(dialogue_interaction)
 

@@ -33,6 +33,7 @@ def get_dialogues(
         column_intent='Intention',
         column_dialogue_id='Dialogue ID',
         column_domain='Domain',
+        column_slot='Slots',
 ) -> List[DialogueStory]:
     dialogues = []
 
@@ -41,7 +42,8 @@ def get_dialogues(
         for row in dialogue.to_records('dict'):
             intentions = [intent.split('-')[-1] for intent in row[column_intent]]
             actions = [action.split('-')[-1] for action in row[column_actions]]
-            dialogue_story.add_intentions_actions(intentions, actions)
+            slots = row[column_slot]
+            dialogue_story.add_intentions_actions(intentions, actions, slots)
         dialogues.append(dialogue_story)
     return dialogues
 
@@ -59,12 +61,26 @@ def check_ambiguity(dialogue_a: DialogueStory, dialogue_b: DialogueStory) -> boo
             dialogue_a.dialogue_story[:min_length],
             dialogue_b.dialogue_story[:min_length]
     ):
-        if interaction_a.state.intentions == interaction_b.state.intentions:
+        if interaction_a.state == interaction_b.state:
             if interaction_a.actions != interaction_b.actions:
                 return True
         else:
             return False
     return False
+
+
+def index_ambiguity(dialogue_a: DialogueStory, dialogue_b: DialogueStory) -> int:
+    min_length = min(len(dialogue_a), len(dialogue_b))
+    for idx, (interaction_a, interaction_b) in enumerate(zip(
+            dialogue_a.dialogue_story[:min_length],
+            dialogue_b.dialogue_story[:min_length]
+    )):
+        if interaction_a.state == interaction_b.state:
+            if interaction_a.actions != interaction_b.actions:
+                return idx
+        else:
+            return None
+    return None
 
 
 def calculate_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> float:
@@ -78,14 +94,7 @@ def calculate_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> flo
     def to_percentage(value: float, length: int, decimals: int = 2) -> float:
         return round(value * 100 / length, decimals)
 
-    dataset = copy.deepcopy(dataset)
-    dataset = get_set_dialogues(dataset)
-    dataset_sample = random.sample(dataset, sample)
-    dataset_sample = [
-        (dialogue_a, dialogue_b)
-        for idx, dialogue_a in enumerate(dataset_sample)
-        for dialogue_b in dataset_sample[idx + 1:]
-    ]
+    dataset_sample = get_all_combinations(dataset, sample)
 
     count_ambiguity = 0
     for dialogue_a, dialogue_b in tqdm(dataset_sample):
@@ -95,10 +104,30 @@ def calculate_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> flo
     return to_percentage(count_ambiguity, len(dataset_sample))
 
 
+def get_all_combinations(dataset, sample):
+    dataset_sample = random.sample(dataset, sample)
+    dataset_sample = [
+        (first_dialogue, last_dialogue)
+        for idx, first_dialogue in enumerate(dataset_sample)
+        for last_dialogue in dataset_sample[idx + 1:]
+    ]
+    return dataset_sample
+
+
+def get_ambiguity_combinations(dataset: List[DialogueStory], sample=1000) -> List[tuple]:
+    dataset_sample = get_all_combinations(dataset, sample)
+    ambiguity = []
+    for dialogue_a, dialogue_b in tqdm(dataset_sample):
+        if check_ambiguity(dialogue_a, dialogue_b):
+            ambiguity.append((dialogue_a, dialogue_b))
+
+    return ambiguity
+
+
 if __name__ == '__main__':
     dialogue_a = DialogueStory('id0', 'd1')
     dialogue_a.add_intentions_actions(
-        ['I_I','I'],
+        ['I_I', 'I'],
         ['REQ_MORE']
     )
     dialogue_a.add_intentions_actions(
@@ -111,16 +140,14 @@ if __name__ == '__main__':
     )
     dialogue_b = DialogueStory('id1', 'd1')
     dialogue_b.add_intentions_actions(
-        ['I_I','I'],
+        ['I_I', 'I'],
         ['REQ_MORE']
     )
     dialogue_b.add_intentions_actions(
         ['I'],
-        ['CONFIRM']
+        ['REQ_MORE']
     )
-    # test check_ambiguity
-    assert check_ambiguity(dialogue_a, dialogue_b) == False
-
-
-
-
+    print(check_ambiguity(dialogue_a, dialogue_b))
+    print(
+        get_ambiguity_combinations([dialogue_a, dialogue_b], sample=2)
+    )

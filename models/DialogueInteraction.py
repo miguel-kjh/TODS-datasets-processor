@@ -26,6 +26,10 @@ class DialogueInteraction:
     @property
     def actions(self) -> List[str]:
         return self._actions
+
+    @actions.setter
+    def actions(self, actions: List[str]):
+        self._actions = actions
     
     def get_intentions(self) -> List[str]:
         return self._state.intentions
