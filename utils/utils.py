@@ -100,27 +100,35 @@ def calculate_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> flo
     dataset_sample = get_all_combinations(dataset, sample)
 
     count_ambiguity = 0
+    dialogue_with_ambiguity = set()
     for dialogue_a, dialogue_b in tqdm(dataset_sample):
-        if check_ambiguity(dialogue_a, dialogue_b):
+        if dialogue_a not in dialogue_with_ambiguity and check_ambiguity(dialogue_a, dialogue_b):
             count_ambiguity += 1
+            dialogue_with_ambiguity.add(dialogue_b)
 
-    return to_percentage(count_ambiguity, len(dataset_sample))
+    return to_percentage(count_ambiguity, len(dataset))
 
 
-def get_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> List[tuple]:
+def get_ambiguity(dataset: List[DialogueStory]) -> dict:
+    dataset_sample = get_all_combinations(dataset, sample=1000)
 
-    dataset_sample = get_all_combinations(dataset, sample)
-
-    ambiguities = set()
+    ambiguities = {}
     for dialogue_a, dialogue_b in tqdm(dataset_sample, desc="Get ambiguity", unit="dialogues"):
-        if check_ambiguity(dialogue_a, dialogue_b):
-            ambiguities.add((dialogue_a, dialogue_b))
+        if (dialogue_a, dialogue_b) not in ambiguities.keys():
+            if check_ambiguity(dialogue_a, dialogue_b):
+                ambiguities[(dialogue_a, dialogue_b)] = 1
+        else:
+            ambiguities[(dialogue_a, dialogue_b)] += 1
 
-    return list(ambiguities)
+    return ambiguities
 
 
-def get_all_combinations(dataset, sample):
-    dataset_sample = random.sample(dataset, sample)
+def get_all_combinations(dataset, sample=None):
+    if sample:
+        dataset_sample = random.sample(dataset, sample)
+    else:
+        dataset_sample = copy.deepcopy(dataset)
+
     dataset_sample = [
         (first_dialogue, last_dialogue)
         for idx, first_dialogue in enumerate(dataset_sample)
