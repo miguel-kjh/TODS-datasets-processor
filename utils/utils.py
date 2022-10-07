@@ -56,6 +56,9 @@ def check_ambiguity(dialogue_a: DialogueStory, dialogue_b: DialogueStory) -> boo
     :return: True if the dialogues are ambiguous, False otherwise
     """
 
+    if dialogue_a.domain != dialogue_b.domain:
+        return False
+
     min_length = min(len(dialogue_a), len(dialogue_b))
     for interaction_a, interaction_b in zip(
             dialogue_a.dialogue_story[:min_length],
@@ -102,6 +105,18 @@ def calculate_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> flo
             count_ambiguity += 1
 
     return to_percentage(count_ambiguity, len(dataset_sample))
+
+
+def get_ambiguity(dataset: List[DialogueStory], sample: int = 1000) -> List[tuple]:
+
+    dataset_sample = get_all_combinations(dataset, sample)
+
+    ambiguities = set()
+    for dialogue_a, dialogue_b in tqdm(dataset_sample, desc="Get ambiguity", unit="dialogues"):
+        if check_ambiguity(dialogue_a, dialogue_b):
+            ambiguities.add((dialogue_a, dialogue_b))
+
+    return list(ambiguities)
 
 
 def get_all_combinations(dataset, sample):

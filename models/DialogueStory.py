@@ -32,6 +32,12 @@ class DialogueStory:
     def get_interactions(self) -> List:
         return self.dialogue_story
 
+    def get_intentions(self) -> List:
+        return [interaction.get_intentions() for interaction in self.dialogue_story]
+
+    def get_actions(self) -> List:
+        return [interaction.actions for interaction in self.dialogue_story]
+
     def get_id(self) -> str:
         return self.id
 

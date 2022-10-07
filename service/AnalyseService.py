@@ -1,10 +1,10 @@
-
 import pandas as pd
+from typing import List
 
-
+from models.DialogueStory import DialogueStory
 from service.CSVService import CSVService
 from service.MongoDB import MongoDB
-from utils.utils import get_dialogues, calculate_ambiguity
+from utils.utils import get_dialogues, calculate_ambiguity, get_ambiguity
 
 
 class AnalyseService:
@@ -55,6 +55,51 @@ class AnalyseService:
             )
         return pd.DataFrame(df)
 
+    def _calculate_types_of_ambiguous_dialogues_for_dataset(
+            self,
+            dataset: List[DialogueStory],
+            sample=1000
+    ) -> List[pd.DataFrame]:
+
+        df = {
+            'Id_Ambiguous_Dialogue': [],
+            'Id_A': [],
+            'Id_B': [],
+            'Intention_A': [],
+            'Intention_B': [],
+            'Action_A': [],
+            'Action_B': [],
+        }
+
+        """df_freq = {
+            'Id_Ambiguous_Dialogue': [],
+            'Freq': [],
+        }"""
+
+        for idx, (dialogue_a, dialogue_b) in enumerate(get_ambiguity(dataset, sample)):
+            for intentions, actions in zip(
+                    zip(dialogue_a.get_intentions(), dialogue_b.get_intentions()),
+                    zip(dialogue_a.get_actions(), dialogue_b.get_actions())
+            ):
+                df['Id_Ambiguous_Dialogue'].append(idx)
+                df['Id_A'].append(dialogue_a.id)
+                df['Id_B'].append(dialogue_b.id)
+                df['Intention_A'].append(intentions[0])
+                df['Intention_B'].append(intentions[1])
+                df['Action_A'].append(actions[0])
+                df['Action_B'].append(actions[1])
+            """df_freq['Id_Ambiguous_Dialogue'].append(dialogue.id)
+            df_freq['Freq'].append(dialogue.freq)"""
+        return pd.DataFrame(df)
+
+    def _calculate_types_of_ambiguous_dialogues(self, samples: int = 1000) -> dict:
+        df = {}
+        for name, dataset in self.datasets.items():
+            df[name] = self._calculate_types_of_ambiguous_dialogues_for_dataset(dataset, samples)
+            self.csv_service.save(df[name], f'ambiguous_dialogues_{name}')
+        return df
+
     def process(self) -> None:
-        df = self._calculate_dataset_of_ambiguity()
-        self.csv_service.save(df, 'ambiguity')
+        #df = self._calculate_dataset_of_ambiguity()
+        #self.csv_service.save(df, 'ambiguity')
+        self._calculate_types_of_ambiguous_dialogues()
