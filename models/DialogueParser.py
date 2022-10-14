@@ -15,11 +15,15 @@ class DialogueParser:
             'Service': [],
             'Speaker': [],
             'Text': [],
-            'Actions': [],
             'Intents': [],
-            'Original_Intents': [],
+            'Intentions_slots': [],
+            'Actions': [],
+            'Actions_slots': [],
             'Slot': [],
-            'Slot_values': []
+            'Slot_values': [],
+            'State_Intents': [],
+            'State_slot': [],
+            'State_slot_values': [],
         }
 
     @staticmethod
@@ -35,23 +39,37 @@ class DialogueParser:
             df['Speaker'] += dialogue['turns']['speaker']
             df['Text'] += dialogue['turns']['utterance']
 
-            for turn in dialogue['turns']['frames']:
+            for idx, turn in enumerate(dialogue['turns']['frames']):
 
                 df['Actions'].append([list_actions[int(act)] for act in turn['actions'][0]['act']])
+                df['Actions_slots'].append([act_slot for act_slot in turn['actions'][0]['slot']])
 
                 try:
                     intent = turn['state'][0]['active_intent']
                     df['Intents'].append([list_actions[act] for act in turn['actions'][0]['act']])
-                    df['Original_Intents'].append(intent)
+                    df['Intentions_slots'].append([act_slot for act_slot in turn['actions'][0]['slot']])
+                    df['State_Intents'].append(intent)
                 except KeyError:
                     df['Intents'].append(None)
                     df['Original_Intents'].append(None)
 
-                name_slot = turn['state'][0]['slot_values']['slot_name']
-                value_slot = turn['state'][0]['slot_values']['slot_value_list']
+                name_slot = turn['slots'][0]['slot']
+                value_slot = [
+                    df['Text'][idx][start:end]
+                    for start, end in zip(
+                        turn['slots'][0]['start'],
+                        turn['slots'][0]['exclusive_end']
+                    )
+                ]
 
                 df['Slot'].append(name_slot)
                 df['Slot_values'].append(value_slot)
+
+                name_slot = turn['state'][0]['slot_values']['slot_name']
+                value_slot = turn['state'][0]['slot_values']['slot_value_list']
+
+                df['State_slot'].append(name_slot)
+                df['State_slot_values'].append(value_slot)
 
         return pd.DataFrame(df)
 

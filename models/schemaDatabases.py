@@ -11,6 +11,8 @@ class SchemaDatabase:
             "User Utterance": [],
             "Intention": [],
             "Atomic_Intent": [],
+            "Entities": [],
+            "Entities Value": [],
             "Slots": [],
             "Slots Value": [],
             "Mandatory Slots": [],
@@ -84,6 +86,12 @@ class SchemaDatabase:
 
     def add_optional_slots_value(self, optional_slots_value: List[str]) -> None:
         self.dataset_schema["Optional Slots Value"].append(optional_slots_value)
+
+    def add_entities(self, entities: List[str]) -> None:
+        self.dataset_schema["Entities"].append(entities)
+
+    def add_entities_value(self, entities_value: List[str]) -> None:
+        self.dataset_schema["Entities Value"].append(entities_value)
 
     def get_dataset_schema(self) -> dict:
         return self.dataset_schema
