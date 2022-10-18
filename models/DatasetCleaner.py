@@ -21,7 +21,7 @@ class DatasetCleaner:
         self._service_name = 'Service'
         self._task_name = 'Original_Intents'
 
-        self.dummy_action = 'LISTEN'
+        #self.dummy_action = 'LISTEN'
 
         self._user_speaker = 0
         self._system_speaker = 1
@@ -48,15 +48,14 @@ class DatasetCleaner:
 
         for id, df in tqdm(dataset.groupby(by="Dialogue Id"), desc="Cleaning datasets..."):
 
-            if [] not in df[self._action_name].tolist() and "" not in df[self._action_name].tolist():
+            if ([] not in df[self._action_name].tolist() and "" not in df[self._action_name].tolist()):
+                    #or 'NOTIFY_FAILURE' not in np.concatenate(df[self._action_name].tolist()):
                 for i in range(0, len(df), 2):
                     row_1 = df.iloc[i]
                     row_2 = df.iloc[i + 1]
 
                     actions = copy(row_2[self._action_name])
-                    actions.append(self.dummy_action)
                     atomic_action = list2atomic_item(row_2[self._action_name])
-                    atomic_action.append(self.dummy_action)
 
                     # TODO: stack this method in only one
                     self.schemaDatabase.add_dialogue_id(id)
