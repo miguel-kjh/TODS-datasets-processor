@@ -78,7 +78,6 @@ class DatasetCleaner:
                     self.schemaDatabase.add_entities(row_1["Slot"])
                     self.schemaDatabase.add_entities_value(row_1["Slot_values"])
 
-
         df_cleaned = pd.DataFrame(self.schemaDatabase.get_dataset_schema())
         Logger.info(f'Number of dialogues in the final datasets: {len(df_cleaned["Dialogue ID"].unique())}')
         return df_cleaned

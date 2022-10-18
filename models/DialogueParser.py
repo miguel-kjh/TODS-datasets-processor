@@ -95,18 +95,25 @@ class DialogueParser:
 
                 df['Actions'].append(act['dialog_act']['act_type'])
                 if not speaker:
-                    intent = [state['active_intent'] for state in turn['state']]
                     df['Intents'].append(act['dialog_act']['act_type'])
-                    df['Original_Intents'].append(intent)
                     name_slot = [state['slots_values']['slots_values_name'] for state in turn['state']]
                     value_slot = [state['slots_values']['slots_values_list'] for state in turn['state']]
+                    state_intents = [state['active_intent'] for state in turn['state']]
                     df['Slot'].append(name_slot[0] if name_slot else name_slot)
                     df['Slot_values'].append(value_slot[0] if value_slot else value_slot)
+                    df['State_Intents'].append(state_intents)
+                    df['State_slot'].append(name_slot[0] if name_slot else name_slot)
+                    df['State_slot_values'].append(value_slot[0] if value_slot else value_slot)
                 else:
                     df['Intents'].append(None)
-                    df['Original_Intents'].append(None)
                     df['Slot'].append(None)
                     df['Slot_values'].append(None)
+                    df['State_Intents'].append(None)
+                    df['State_slot'].append(None)
+                    df['State_slot_values'].append(None)
+
+                df['Intentions_slots'].append(None)
+                df['Actions_slots'].append(None)
 
         return pd.DataFrame(df)
 
