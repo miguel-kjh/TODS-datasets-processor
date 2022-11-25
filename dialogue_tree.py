@@ -9,7 +9,7 @@ from service.MongoDB import MongoDB
 import os
 
 current_path = os.environ.get("PATH")
-os.environ["PATH"] = current_path + ";C:\\Program Files (x86)\\Graphviz\\bin"
+os.environ["PATH"] = current_path + ";C:\\Program Files\\Graphviz\\bin"
 
 
 def get_data(
@@ -31,6 +31,19 @@ def get_routes(df: pd.DataFrame) -> dict:
         if route not in routes.values():
             routes[id_] = route
     return routes
+
+
+def create_branches(routes: dict) -> dict:
+    branches = {}
+    for id, route in tqdm(routes.items(), desc='Creating branches'):
+        if id == 0:
+            branches[id] = [(intent, action, id) for intent, action in route]
+        for idx, (intent, action) in enumerate(route):
+            if idx == 0:
+                branches[id] = [intent]
+            else:
+                branches[id].append(action)
+    return branches
 
 
 def create_graph_from_routes(routes: dict) -> nx.DiGraph:
@@ -63,7 +76,7 @@ def visualize_graph(graph: nx.DiGraph):
 
 def visualize_graph_as_tree(graph: nx.DiGraph):
     # view graph as a tree
-    #tree = nx.bfs_tree(graph, 'start')
+    graph = nx.bfs_tree(graph, 'start')
     # pos = graphviz_layout(tree, prog='dot')
     """nx.draw_networkx_nodes(graph, pos, nodelist=['start'], node_color='r', node_size=500, alpha=0.8)
     nx.draw_networkx_nodes(graph, pos, nodelist=[node for node in graph.nodes if node != 'start'], node_color='b',
