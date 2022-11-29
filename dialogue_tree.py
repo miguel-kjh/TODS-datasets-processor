@@ -49,13 +49,31 @@ def create_branches(routes: dict) -> dict:
 def create_graph_from_routes(routes: dict) -> nx.DiGraph:
     graph = nx.DiGraph()
     graph.add_node('start')
+    existing_nodes = []
     for id, route in tqdm(routes.items(), desc='Creating graph'):
         for idx, (intent, action) in enumerate(route):
+
+            if intent not in existing_nodes:
+                existing_nodes.append(intent)
+            else:
+                intent = f'{intent}_{id}'
+                existing_nodes.append(intent)
+            if action not in existing_nodes:
+                existing_nodes.append(action)
+            else:
+                action = f'{action}_{id}'
+                existing_nodes.append(action)
+
             if idx == 0:
                 graph.add_edge('start', intent)
                 graph.add_edge(intent, action)
             else:
-                graph.add_edge(route[idx - 1][1], intent)
+                last_route = route[idx - 1][1]
+                if last_route not in existing_nodes:
+                    graph.add_edge(last_route, action)
+                else:
+                    last_route = f'{last_route}_{id}'
+                graph.add_edge(last_route, intent)
                 graph.add_edge(intent, action)
     return graph
 
