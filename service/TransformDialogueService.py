@@ -1,16 +1,20 @@
 from models.DialogueParser import DialogueParser
 from service.MongoDB import MongoDB
 from view.Logger import Logger
-
-from datasets import load_dataset
+from models.ConvlabDownloader import ConvlabDownloader
 
 
 class TransformDialogueService:
 
     def __init__(self, config: dict):
         super().__init__()
-        self._dataset = load_dataset(config['dataset']['path'])
+        #self._dataset = load_dataset(config['dataset']['path'])
         #self._dataset_schema = load_dataset(config['dataset']['path'], name=config['dataset']['name_'])
+        self._dataset = { #TODO: change convlabDownloader to load_dataset even the data_split
+            'train': ConvlabDownloader(config['dataset']['path'], 'train'),
+            'dev': ConvlabDownloader(config['dataset']['path'], 'validation'),
+            'test': ConvlabDownloader(config['dataset']['path'], 'test')
+        }
         self.parser = DialogueParser()
         self.mongodb_service = MongoDB(config['dataset']['DB_name'], config['database']['path'])
         self.filename = config['dataset']['filename']

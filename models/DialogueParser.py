@@ -3,125 +3,90 @@ from tqdm import tqdm
 from typing import List
 
 import pandas as pd
+
+from models.ConvlabDownloader import ConvlabDownloader
 from utils.ProjectConstants import list_actions
 
 
 class DialogueParser:
 
+    dataset_schema = [
+        "Dialogue ID",
+        "Domain",
+        "User_Utterance",
+        "Intention",
+        "Entities",
+        "Entities Value",
+        "Slots",
+        "Slots Value",
+        "Bot_Utterance",
+        "Action",
+        "Type",
+    ]
+
+    def _get_id(self, dialogue_idx: int) -> str:
+        return f'Dialogue_{dialogue_idx}'
+
     @staticmethod
     def _get_dataframe_schema() -> dict:
-        return {
-            'Dialogue Id': [],
-            'Service': [],
-            'Speaker': [],
-            'Text': [],
-            'Intents': [],
-            'Intentions_slots': [],
-            'Actions': [],
-            'Actions_slots': [],
-            'Slot': [],
-            'Slot_values': [],
-            'State_Intents': [],
-            'State_slot': [],
-            'State_slot_values': [],
-        }
+        return {key: [] for key in DialogueParser.dataset_schema}
 
-    @staticmethod
-    def __sgd_to_dataframes(dialogues: list, type_dataset: str) -> pd.DataFrame:
-
+    def _to_df(self, dialogues: ConvlabDownloader, split: str,  dataset_type: str) -> pd.DataFrame:
         df = DialogueParser._get_dataframe_schema()
 
-        for dialogue in tqdm(dialogues, desc='Parsing dialogues for %s' % type_dataset):
+        dialogue_idx = 0
+        for dialogue in tqdm(dialogues.policy_data, desc=f'Parsing dialogues for {split} - {dataset_type}'):
 
-            story_len = len(dialogue['turns']['speaker'])
-            df['Dialogue Id'] += [dialogue['dialogue_id']] * story_len
-            df['Service'] += [dialogue['services']] * story_len
-            df['Speaker'] += dialogue['turns']['speaker']
-            df['Text'] += dialogue['turns']['utterance']
+            if dialogue['context'][0]['utt_idx'] == 0:
+                dialogue_idx += 1
+            df['Dialogue ID'].append(self._get_id(dialogue_idx))
+            df['Bot_Utterance'].append(dialogue['utterance'])
+            actions = []
+            domain = set()
+            for _, intents in dialogue['dialogue_acts'].items():
+                for intent in intents:
+                    actions.append(f'{intent["domain"]}_{intent["intent"]}_{intent["slot"]}')
+                    domain.add(intent['domain'])
+            df['Action'].append(actions)
+            df['Domain'].append(list(domain))
 
-            for idx, turn in enumerate(dialogue['turns']['frames']):
+            user_data = dialogue['context'][0]
+            df['User_Utterance'].append(user_data['utterance'])
+            entities = []
+            entities_value = []
+            intentions = []
+            for intents in user_data['dialogue_acts'].values():
+                for intent in intents:
+                    intentions.append(intent["intent"])
+                    if intent['slot'] != '':
+                        entities.append(intent['slot'])
+                        try:
+                            entities_value.append(intent['value'])
+                        except KeyError:
+                            entities_value.append('')
 
-                df['Actions'].append([list_actions[int(act)] for act in turn['actions'][0]['act']])
-                df['Actions_slots'].append([act_slot for act_slot in turn['actions'][0]['slot']])
+            df['Intention'].append(intentions)
+            df['Entities'].append(entities)
+            df['Entities Value'].append(entities_value)
 
-                try:
-                    intent = turn['state'][0]['active_intent']
-                    df['Intents'].append([list_actions[act] for act in turn['actions'][0]['act']])
-                    df['Intentions_slots'].append([act_slot for act_slot in turn['actions'][0]['slot']])
-                    df['State_Intents'].append(intent)
-                except KeyError:
-                    df['Intents'].append(None)
-                    df['Original_Intents'].append(None)
+            slots = []
+            slots_value = []
+            for state in user_data['state'].values():
+                for slot, value in state.items():
+                    if value != '':
+                        slots.append(slot)
+                        slots_value.append(value)
 
-                name_slot = turn['slots'][0]['slot']
-                value_slot = [
-                    df['Text'][idx][start:end]
-                    for start, end in zip(
-                        turn['slots'][0]['start'],
-                        turn['slots'][0]['exclusive_end']
-                    )
-                ]
+            df['Slots'].append(slots)
+            df['Slots Value'].append(slots_value)
+            df['Type'].append(split)
 
-                df['Slot'].append(name_slot)
-                df['Slot_values'].append(value_slot)
+        df = pd.DataFrame(df)
+        #save csv
+        if split == 'test':
+            df.to_csv(f'{split}_{dataset_type}.csv', index=False, encoding='utf-8', sep=';')
 
-                name_slot = turn['state'][0]['slot_values']['slot_name']
-                value_slot = turn['state'][0]['slot_values']['slot_value_list']
+        return df
 
-                df['State_slot'].append(name_slot)
-                df['State_slot_values'].append(value_slot)
-
-        return pd.DataFrame(df)
-
-    @staticmethod
-    def __multiwoz_to_dataframes(dialogues: list, type_dataset: str) -> pd.DataFrame:
-
-        df = DialogueParser._get_dataframe_schema()
-
-        for dialogue in tqdm(dialogues, desc='Parsing dialogues for %s' % type_dataset):
-
-            story_len = len(dialogue['turns']['speaker'])
-            df['Dialogue Id'] += [dialogue['dialogue_id']] * story_len
-            df['Service'] += [dialogue['services']] * story_len
-            df['Speaker'] += dialogue['turns']['speaker']
-            df['Text'] += dialogue['turns']['utterance']
-
-            for turn, speaker, act, utt in zip(
-                    dialogue['turns']['frames'],
-                    dialogue['turns']['speaker'],
-                    dialogue['turns']['dialogue_acts'],
-                    dialogue['turns']['utterance']
-            ):
-
-                df['Actions'].append(act['dialog_act']['act_type'])
-                if not speaker:
-                    df['Intents'].append(act['dialog_act']['act_type'])
-                    name_slot = [state['slots_values']['slots_values_name'] for state in turn['state']]
-                    value_slot = [state['slots_values']['slots_values_list'] for state in turn['state']]
-                    state_intents = [state['active_intent'] for state in turn['state']]
-                    df['Slot'].append(name_slot[0] if name_slot else name_slot)
-                    df['Slot_values'].append(value_slot[0] if value_slot else value_slot)
-                    df['State_Intents'].append(state_intents)
-                    df['State_slot'].append(name_slot[0] if name_slot else name_slot)
-                    df['State_slot_values'].append(value_slot[0] if value_slot else value_slot)
-                else:
-                    df['Intents'].append(None)
-                    df['Slot'].append(None)
-                    df['Slot_values'].append(None)
-                    df['State_Intents'].append(None)
-                    df['State_slot'].append(None)
-                    df['State_slot_values'].append(None)
-
-                df['Intentions_slots'].append(None)
-                df['Actions_slots'].append(None)
-
-        return pd.DataFrame(df)
-
-    def transform(self, dialogues: List[dict], split: str, dataset_type: str) -> pd.DataFrame:
-
-        if dataset_type == 'SGD_dataset':
-            return self.__sgd_to_dataframes(dialogues, split)
-        elif dataset_type == 'multi_woz_dataset':
-            return self.__multiwoz_to_dataframes(dialogues, split)
-
-        raise ValueError(f"Dataset type {dataset_type} not supported")
+    def transform(self, dialogues: ConvlabDownloader, split: str, dataset_type: str) -> pd.DataFrame:
+        return self._to_df(dialogues, split, dataset_type)
