@@ -14,13 +14,17 @@ class DialogueParser:
         "Dialogue ID",
         "Domain",
         "User_Utterance",
+        "Bot_Utterance",
         "Intention",
+        "Action",
         "Entities",
         "Entities Value",
         "Slots",
         "Slots Value",
-        "Bot_Utterance",
-        "Action",
+        "Mandatory Slots",
+        "Mandatory Slots Value",
+        "Optional Slots",
+        "Optional Slots Value",
         "Type",
     ]
 
@@ -79,6 +83,10 @@ class DialogueParser:
 
             df['Slots'].append(slots)
             df['Slots Value'].append(slots_value)
+            df['Mandatory Slots'].append([])
+            df['Mandatory Slots Value'].append([])
+            df['Optional Slots'].append(slots)
+            df['Optional Slots Value'].append(slots_value)
             df['Type'].append(split)
 
         df = pd.DataFrame(df)
