@@ -82,9 +82,6 @@ class DialogueParser:
             df['Type'].append(split)
 
         df = pd.DataFrame(df)
-        #save csv
-        if split == 'test':
-            df.to_csv(f'{split}_{dataset_type}.csv', index=False, encoding='utf-8', sep=';')
 
         return df
 

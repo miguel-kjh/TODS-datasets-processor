@@ -22,3 +22,4 @@ class Logger:
     def print_title(title: str) -> None:
         Logger.print_sep()
         print('\n' + title.upper() + '\n')
+

@@ -1,7 +1,7 @@
 database:
   path: mongodb://localhost:27017
 defaults:
-  - dataset: sgd.yaml
+  - dataset: multiwoz.yaml
 
 seed: 2022
 train_size: 0.6
