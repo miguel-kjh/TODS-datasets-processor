@@ -1,9 +1,19 @@
 import pandas as pd
+from typing import Tuple, List
 
 from models.DialogueParser import DialogueParser
 from service.MongoDB import MongoDB
 from view.Logger import Logger
 from models.ConvlabDownloader import ConvlabDownloader
+import numpy as np
+
+
+class State:
+
+    def __init__(self, intention: List[str], slots: List[str], action: str):
+        self.intention = intention
+        self.slots = slots
+        self.action = action
 
 
 class TransformDialogueService:
@@ -47,6 +57,30 @@ class TransformDialogueService:
         dialogues_id_are_incomplete = df[df['Action'].apply(lambda x: len(x)) == 0]['Dialogue ID'].unique()
         return df[~df['Dialogue ID'].isin(dialogues_id_are_incomplete)]
 
+    @staticmethod
+    def _delete_ambiguous_dialogues(df: pd.DataFrame) -> pd.DataFrame:
+        df_without_ambiguous_dialogues = df.copy()
+        map_actions = {
+            'inform': 'inform',
+            'request': 'inform',
+            'select': 'inform',
+            'recommend': 'inform',
+            'reqmore': 'inform',
+            'select': 'inform',
+
+        }
+        actions = []
+        for acts in df_without_ambiguous_dialogues['Action']:
+            list_actions = []
+            for act in acts:
+                for key, value in map_actions.items():
+                    if key in act:
+                        act = act.replace(key, value)
+                list_actions.append(act)
+            actions.append(list_actions)
+        df_without_ambiguous_dialogues['Action'] = actions
+        return df_without_ambiguous_dialogues
+
     def process(self):
 
         df = pd.DataFrame()
@@ -67,4 +101,11 @@ class TransformDialogueService:
             pd.DataFrame(df_std, index=[0]),
             '{}_{}'.format(self.filename, 'STD')
         )
+        df_without_ambiguous_dialogues = self._delete_ambiguous_dialogues(df)
+        self.mongodb_service.save(
+            df_without_ambiguous_dialogues,
+            '{}_{}'.format(self.filename, 'NO_AMBIGUOUS')
+        )
+        df_without_ambiguous_dialogues.to_csv('{}_{}.csv'.format(self.filename, 'NO_AMBIGUOUS'), index=False,
+                                              encoding='utf-8', sep=';')
         Logger.info("save to {}".format(file))
