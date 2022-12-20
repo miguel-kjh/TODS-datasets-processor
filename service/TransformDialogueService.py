@@ -1,3 +1,4 @@
+import random
 import pandas as pd
 from typing import Tuple, List
 
@@ -5,15 +6,9 @@ from models.DialogueParser import DialogueParser
 from service.MongoDB import MongoDB
 from view.Logger import Logger
 from models.ConvlabDownloader import ConvlabDownloader
-import numpy as np
-
-
-class State:
-
-    def __init__(self, intention: List[str], slots: List[str], action: str):
-        self.intention = intention
-        self.slots = slots
-        self.action = action
+from models.DialogueInteraction import DialogueInteraction
+from models.DialogueState import DialogueState
+from tqdm import tqdm
 
 
 class TransformDialogueService:
@@ -58,29 +53,62 @@ class TransformDialogueService:
         return df[~df['Dialogue ID'].isin(dialogues_id_are_incomplete)]
 
     @staticmethod
-    def _delete_ambiguous_dialogues(df: pd.DataFrame) -> pd.DataFrame:
-        df_without_ambiguous_dialogues = df.copy()
-        map_actions = {
-            'inform': 'inform',
-            'request': 'inform',
-            'select': 'inform',
-            'recommend': 'inform',
-            'reqmore': 'inform',
-            'select': 'inform',
+    def _change_actions(df: pd.DataFrame) -> pd.DataFrame:
 
-        }
-        actions = []
-        for acts in df_without_ambiguous_dialogues['Action']:
+        def map_actions(acts: List[str]) -> List[str]:
+            actions2map = {
+                'inform': 'inform',
+                'request': 'inform',
+                'select': 'inform',
+                'recommend': 'inform',
+                'reqmore': 'inform',
+                'select': 'inform',
+            }
             list_actions = []
             for act in acts:
-                for key, value in map_actions.items():
+                for key, value in actions2map.items():
                     if key in act:
                         act = act.replace(key, value)
                 list_actions.append(act)
-            actions.append(list_actions)
-        df_without_ambiguous_dialogues['Action'] = actions
+            return list_actions
+        
+        df_without_ambiguous_dialogues = df.copy()
+        
+        df_without_ambiguous_dialogues['Action'] = df_without_ambiguous_dialogues['Action'].apply(map_actions)
+        df_without_ambiguous_dialogues['Previous Action'] = df_without_ambiguous_dialogues['Previous Action'].apply(map_actions)
+        
         return df_without_ambiguous_dialogues
 
+    def delete_ambiguous_dialogues(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, float]:
+        df_without_ambiguous_dialogues = df.copy()
+        df_without_ambiguous_dialogues = self._change_actions(df_without_ambiguous_dialogues)
+        # map rows to state
+        states = list(
+            map(
+                lambda x: (
+                    DialogueState(x[1]['Intention'], x[1]['Previous Action'], x[1]['Slots']),
+                    x[1]['Action'],
+                    x[1]['Dialogue ID'], 
+                ),
+                df_without_ambiguous_dialogues.iterrows()
+            )
+        )
+        id_to_delete = set()
+        for idx, state in tqdm(enumerate(states), desc='Delete Ambiguous Dialogues'):
+            for next_state in states[idx:]:
+                if state[0] == next_state[0]:
+                    if state[1] != next_state[1]:
+                        id_to_delete.add(state[2])
+
+        percentage = round(
+            len(id_to_delete) / len(df_without_ambiguous_dialogues['Dialogue ID'].unique()) * 100, 2
+        )
+        print(len(df_without_ambiguous_dialogues))
+        # delete samples that id is in id_to_delete
+        df_without_ambiguous_dialogues = df_without_ambiguous_dialogues[~df_without_ambiguous_dialogues['Dialogue ID'].isin(id_to_delete)]
+        print(len(df_without_ambiguous_dialogues))
+        return df_without_ambiguous_dialogues, percentage
+        
     def process(self):
 
         df = pd.DataFrame()
@@ -89,7 +117,6 @@ class TransformDialogueService:
             df = pd.concat([df, df_split], ignore_index=True)
 
         df_std = self._std_dataset(df)
-        Logger.print_dict(df_std)
         df = self._clean_dataset(df)
         file = "{}_{}".format(self.filename, 'ALL')
         df.to_csv('{}.csv'.format(file), index=False, encoding='utf-8', sep=';')
@@ -97,11 +124,13 @@ class TransformDialogueService:
             df,
             file
         )
+        df_without_ambiguous_dialogues, percente_of_ambiguty  = self.delete_ambiguous_dialogues(df)
+        df_std['Percentage of Ambiguous Dialogues'] = percente_of_ambiguty
+        Logger.print_dict(df_std)
         self.mongodb_service.save(
             pd.DataFrame(df_std, index=[0]),
             '{}_{}'.format(self.filename, 'STD')
         )
-        df_without_ambiguous_dialogues = self._delete_ambiguous_dialogues(df)
         self.mongodb_service.save(
             df_without_ambiguous_dialogues,
             '{}_{}'.format(self.filename, 'NO_AMBIGUOUS')

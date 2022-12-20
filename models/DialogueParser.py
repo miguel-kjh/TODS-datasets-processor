@@ -20,6 +20,7 @@ class DialogueParser:
         "Mandatory Slots Value",
         "Optional Slots",
         "Optional Slots Value",
+        "Previous Action",
         "Type",
     ]
 
@@ -34,6 +35,7 @@ class DialogueParser:
         df = DialogueParser._get_dataframe_schema()
 
         dialogue_idx = 0
+        previous_action = []
         for dialogue in tqdm(dialogues.policy_data, desc=f'Parsing dialogues for {split} - {dataset_type}'):
 
             if dialogue['context'][0]['utt_idx'] == 0:
@@ -47,6 +49,7 @@ class DialogueParser:
                     actions.append(f'{intent["domain"]}_{intent["intent"]}_{intent["slot"]}')
                     domain.add(intent['domain'])
             df['Action'].append(actions)
+            df['Previous Action'].append(previous_action)
             df['Domain'].append(list(domain))
 
             user_data = dialogue['context'][0]
@@ -83,6 +86,7 @@ class DialogueParser:
             df['Optional Slots'].append(slots)
             df['Optional Slots Value'].append(slots_value)
             df['Type'].append(split)
+            previous_action = actions
 
         df = pd.DataFrame(df)
 
