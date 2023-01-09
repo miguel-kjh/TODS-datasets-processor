@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from tqdm import tqdm
 from typing import List
@@ -29,6 +30,12 @@ class DialogueParser:
     @staticmethod
     def __sgd_to_dataframes(dialogues: list, type_dataset: str) -> pd.DataFrame:
 
+        def get_real_action(action: dict) -> str:
+            return [
+                f'{list_actions[int(act)]}_{act_slot}'
+                for act,act_slot in zip(action['act'], action['slot'])
+            ]
+
         df = DialogueParser._get_dataframe_schema()
 
         for dialogue in tqdm(dialogues, desc='Parsing dialogues for %s' % type_dataset):
@@ -41,7 +48,7 @@ class DialogueParser:
 
             for idx, turn in enumerate(dialogue['turns']['frames']):
 
-                df['Actions'].append([list_actions[int(act)] for act in turn['actions'][0]['act']])
+                df['Actions'].append(get_real_action(turn['actions'][0]))
                 df['Actions_slots'].append([act_slot for act_slot in turn['actions'][0]['slot']])
 
                 try:
@@ -93,6 +100,7 @@ class DialogueParser:
                     dialogue['turns']['utterance']
             ):
 
+                print(act['dialog_act'])
                 df['Actions'].append(act['dialog_act']['act_type'])
                 if not speaker:
                     df['Intents'].append(act['dialog_act']['act_type'])
@@ -121,6 +129,7 @@ class DialogueParser:
 
         if dataset_type == 'SGD_dataset':
             return self.__sgd_to_dataframes(dialogues, split)
+            
         elif dataset_type == 'multi_woz_dataset':
             return self.__multiwoz_to_dataframes(dialogues, split)
 

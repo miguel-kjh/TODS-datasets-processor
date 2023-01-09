@@ -49,7 +49,6 @@ class DatasetCleaner:
         for id, df in tqdm(dataset.groupby(by="Dialogue Id"), desc="Cleaning datasets..."):
 
             if ([] not in df[self._action_name].tolist() and "" not in df[self._action_name].tolist()):
-                    #or 'NOTIFY_FAILURE' not in np.concatenate(df[self._action_name].tolist()):
                 for i in range(0, len(df), 2):
                     row_1 = df.iloc[i]
                     row_2 = df.iloc[i + 1]
